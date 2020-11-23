@@ -33,7 +33,7 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.Level(opts.LogLevel))
 
-	conf := config.NewConfig()
+	conf := config.NewConfig(opts.Config)
 	node := node.NewNode(*conf)
 
 	logWatcher := watchlog.NewWatcher(*conf)

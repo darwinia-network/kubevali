@@ -25,10 +25,8 @@ type NodeTemplate struct {
 	Args    map[string]string
 }
 
-func NewConfig() *Config {
-	viper.SetConfigName("kubevali")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+func NewConfig(path string) *Config {
+	viper.SetConfigFile(path)
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("Unable to load config file: %s", err))
