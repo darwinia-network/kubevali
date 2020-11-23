@@ -65,6 +65,10 @@ func listNodesExternalIPs() ([]string, error) {
 		}
 	}
 
+	if len(externalIPs) == 0 {
+		return nil, fmt.Errorf("listNodesExternalIPs: No external node IP found")
+	}
+
 	return externalIPs, nil
 }
 
@@ -75,7 +79,6 @@ func getRandomNodeIP() (string, error) {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-
 	idx := rand.Intn(len(ips))
 	return ips[idx], nil
 }
