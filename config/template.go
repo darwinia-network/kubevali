@@ -17,7 +17,7 @@ import (
 const recursionMaxNums = 1000
 
 // Copied and modified from https://github.com/helm/helm/blob/5b42157335d6e52551d246f233dd66972d5fda09/pkg/engine/engine.go#L112-L125
-func InitTemplateFuncMap(t *template.Template) {
+func initTemplateFuncMap(t *template.Template) {
 	f := sprig.TxtFuncMap()
 	includedNames := make(map[string]int)
 

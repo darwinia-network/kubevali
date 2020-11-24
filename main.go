@@ -33,10 +33,10 @@ func main() {
 	log.Infof("Kubevali %v-%v (built %v)\n", buildVersion, buildCommit, buildDate)
 
 	conf := config.NewConfig(opts.Config)
-	node := node.NewNode(*conf)
+	node := node.NewNode(conf.Node)
 
 	if conf.Watchlog.Enabled {
-		logWatcher := watchlog.NewWatcher(*conf)
+		logWatcher := watchlog.NewWatcher(conf.Watchlog)
 		go logWatcher.Watch(io.TeeReader(node.Stdout, os.Stdout))
 		go logWatcher.Watch(io.TeeReader(node.Stderr, os.Stdout)) // Redirect to STDOUT
 		go logWatcher.Timer()
@@ -46,9 +46,9 @@ func main() {
 	}
 
 	err := node.Run()
-	if exitError, ok := err.(*exec.ExitError); ok {
-		log.Debugf("Node.Run(): %s", exitError.Error())
-		os.Exit(exitError.ExitCode())
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		log.Debugf("Node.Run(): %s", exitErr.Error())
+		os.Exit(exitErr.ExitCode())
 	} else if err != nil {
 		log.Fatalf("Node.Run(): %s", err.Error())
 	} else {

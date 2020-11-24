@@ -2,38 +2,78 @@ package config
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+	"text/template"
 	"time"
-
-	"github.com/spf13/viper"
 )
 
 type Config struct {
-	CommonTemplate string
-	NodeTemplate   NodeTemplate
-	Watchlog       Watchlog
+	Node     Node
+	Watchlog Watchlog
 }
 
 type Watchlog struct {
 	Enabled       bool
-	HealthcheckID string
 	Keyword       string
 	LastThreshold time.Duration
+	HealthcheckID string
 }
 
-type NodeTemplate struct {
+type Node struct {
+	Index   int
 	Command []string
-	Args    map[string]string
 }
 
-func NewConfig(path string) *Config {
-	viper.SetConfigFile(path)
+func renderOrDie(raw *RawConfig) *Config {
+	baseTemplate := template.New("")
+	initTemplateFuncMap(baseTemplate)
+	baseTemplate = template.Must(baseTemplate.Parse(raw.CommonTemplate))
 
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("Unable to load config file: %s", err))
+	node := Node{}
+	{ // Index
+		s := renderValueOrDie(baseTemplate, raw.NodeTemplate.Index, node)
+		if idx, err := strconv.Atoi(s); err != nil {
+			panic(err)
+		} else {
+			node.Index = idx
+		}
 	}
 
-	conf := Config{}
-	viper.Unmarshal(&conf)
+	{ // Command
+		var cmd []string
+		for _, value := range raw.NodeTemplate.Command {
+			v := renderValueOrDie(baseTemplate, value, node)
+			cmd = append(cmd, v)
+		}
+		for key, value := range raw.NodeTemplate.Args {
+			a := fmt.Sprintf("--%s", key)
+			v := renderValueOrDie(baseTemplate, value, node)
+			cmd = append(cmd, a, v)
+		}
+		node.Command = cmd
+	}
 
-	return &conf
+	conf := &Config{
+		Node: node,
+		Watchlog: Watchlog{
+			Enabled:       raw.Watchlog.Enabled,
+			Keyword:       raw.Watchlog.Keyword,
+			LastThreshold: raw.Watchlog.LastThreshold,
+			HealthcheckID: raw.Watchlog.HealthcheckIDs[node.Index],
+		},
+	}
+	return conf
+}
+
+func renderValueOrDie(baseTemplate *template.Template, text string, data interface{}) string {
+	t := template.Must(baseTemplate.Clone())
+	t = template.Must(t.New("").Parse(text))
+
+	var buf strings.Builder
+	if err := t.Execute(&buf, data); err != nil {
+		panic(err)
+	}
+
+	return buf.String()
 }
