@@ -28,9 +28,13 @@ func main() {
 		os.Exit(0)
 	}
 
+	log.SetFormatter(&log.TextFormatter{
+		DisableQuote:     true,
+		DisableTimestamp: true,
+	})
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.Level(opts.LogLevel))
-	log.Infof("Kubevali %v-%v (built %v)\n", buildVersion, buildCommit, buildDate)
+	log.Infof("Kubevali %v-%v (built %v)", buildVersion, buildCommit, buildDate)
 
 	conf := config.NewConfig(opts.Config)
 	node := node.NewNode(conf.Node)
