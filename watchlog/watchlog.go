@@ -13,9 +13,6 @@ import (
 )
 
 type Watcher struct {
-	Stdout io.Reader
-	Stderr io.Reader
-
 	HealthchecksID string
 	Keyword        string
 	LastThreshold  time.Duration
@@ -52,24 +49,22 @@ func NewWatcher(conf config.Config) *Watcher {
 	}
 }
 
-func (w *Watcher) StartWatch() {
-	go func() {
-		scanner := bufio.NewScanner(w.Stdout)
+func (w *Watcher) Watch(r io.Reader) {
+	scanner := bufio.NewScanner(r)
 
-		for scanner.Scan() {
-			t := scanner.Text()
-			if strings.Contains(t, w.Keyword) {
-				w.LastAt = time.Now()
-				logrus.Infof("Detected keyword \"%s\"", w.Keyword)
-			}
+	for scanner.Scan() {
+		t := scanner.Text()
+		if strings.Contains(t, w.Keyword) {
+			w.LastAt = time.Now()
+			logrus.Infof("Detected keyword \"%s\"", w.Keyword)
 		}
-	}()
+	}
+}
 
-	go func() {
-		for _ = range time.Tick(1 * time.Minute) {
-			go w.CallHealthchecksIo()
-		}
-	}()
+func (w *Watcher) Timer() {
+	for _ = range time.Tick(1 * time.Minute) {
+		go w.CallHealthchecksIo()
+	}
 }
 
 func (w *Watcher) CallHealthchecksIo() {

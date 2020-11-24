@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"os"
 	"os/exec"
 
@@ -28,19 +28,22 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Printf("Kubevali %v-%v (built %v)\n", buildVersion, buildCommit, buildDate)
-
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.Level(opts.LogLevel))
+	log.Infof("Kubevali %v-%v (built %v)\n", buildVersion, buildCommit, buildDate)
 
 	conf := config.NewConfig(opts.Config)
 	node := node.NewNode(*conf)
 
-	logWatcher := watchlog.NewWatcher(*conf)
-	logWatcher.Stdout = node.Stdout
-	logWatcher.Stderr = node.Stderr
-
-	logWatcher.StartWatch()
+	if conf.Watchlog.Enabled {
+		logWatcher := watchlog.NewWatcher(*conf)
+		go logWatcher.Watch(io.TeeReader(node.Stdout, os.Stdout))
+		go logWatcher.Watch(io.TeeReader(node.Stderr, os.Stdout)) // Redirect to STDOUT
+		go logWatcher.Timer()
+	} else {
+		go io.Copy(os.Stdout, node.Stdout)
+		go io.Copy(os.Stdout, node.Stderr)
+	}
 
 	err := node.Run()
 	if exitError, ok := err.(*exec.ExitError); ok {

@@ -81,8 +81,8 @@ func NewNode(conf config.Config) *Node {
 
 	node := &Node{
 		Cmd:    cmd,
-		Stdout: io.TeeReader(stdout, os.Stdout),
-		Stderr: io.TeeReader(stderr, os.Stderr),
+		Stdout: stdout,
+		Stderr: stderr,
 	}
 
 	return node
@@ -98,7 +98,7 @@ func (n *Node) ShellCommand() string {
 
 	shcmd.WriteString(strconv.Quote(n.Cmd.Path))
 
-	for _, a := range n.Cmd.Args {
+	for _, a := range n.Cmd.Args[1:] {
 		shcmd.WriteString(" ")
 		shcmd.WriteString(strconv.Quote(a))
 	}
