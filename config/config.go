@@ -54,14 +54,21 @@ func renderOrDie(raw *RawConfig) *Config {
 		node.Command = cmd
 	}
 
+	watchlog := Watchlog{
+		Enabled:       raw.Watchlog.Enabled,
+		Keyword:       raw.Watchlog.Keyword,
+		LastThreshold: raw.Watchlog.LastThreshold,
+	}
+	{ // Watchlog.HealthcheckID
+		if n := len(raw.Watchlog.HealthcheckIDs); node.Index >= n {
+			panic(fmt.Errorf("No enough healthcheck IDs, expect %d, got %d", node.Index+1, n))
+		}
+		watchlog.HealthcheckID = raw.Watchlog.HealthcheckIDs[node.Index]
+	}
+
 	conf := &Config{
-		Node: node,
-		Watchlog: Watchlog{
-			Enabled:       raw.Watchlog.Enabled,
-			Keyword:       raw.Watchlog.Keyword,
-			LastThreshold: raw.Watchlog.LastThreshold,
-			HealthcheckID: raw.Watchlog.HealthcheckIDs[node.Index],
-		},
+		Node:     node,
+		Watchlog: watchlog,
 	}
 	return conf
 }
