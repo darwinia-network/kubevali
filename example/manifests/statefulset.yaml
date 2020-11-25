@@ -62,6 +62,7 @@ spec:
           command:
             - /kubevali/kubevali
             - --config=/config/kubevali.yaml
+            - --log-level=6
 
           resources:
             requests:
