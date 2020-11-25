@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kubevali
+spec:
+  serviceName: kubevali
+  replicas: 1
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 20Gi
+
+  template:
+    serviceAccountName: kubevali
+    spec:
+      enableServiceLinks: false
+
+      volumes:
+        - name: kubevali
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: kubevali
+
+      initContainers:
+        - name: kubevali
+          image: quay.io/darwinia-network/kubevali
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: kubevali
+              mountPath: /volume
+          command:
+            - cp
+            - /kubevali
+            - /volume/kubevali
+
+      containers:
+        - name: node
+          image: quay.io/darwinia-network/darwinia
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: kubevali
+              mountPath: /kubevali
+            - name: config
+              mountPath: /config
+
+          ports:
+            - name: rpc
+              containerPort: 9933
+            - name: ws
+              containerPort: 9944
+            - name: metrics
+              containerPort: 9615
+
+          command:
+            - /kubevali/kubevali
+            - --config=/config/kubevali.yaml
+
+          resources:
+            requests:
+              cpu: 200m
+              memory: 500Mi
+            limits:
+              cpu: 500m
+              memory: 2Gi
