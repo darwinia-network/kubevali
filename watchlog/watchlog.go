@@ -37,17 +37,18 @@ func (w *Watcher) Watch(r io.Reader) {
 
 		logrus.Infof("Watchlog: detected keyword \"%s\"", w.Config.Keyword)
 
-		if w.LastAt.IsZero() {
+		lastAt := w.LastAt
+		w.LastAt = time.Now()
+
+		if lastAt.IsZero() {
 			go w.notifyHealthchecksIo()
 			go w.Timer()
 		}
-
-		w.LastAt = time.Now()
 	}
 }
 
 func (w *Watcher) Timer() {
-	logrus.Debugf("Watchlog.Timer starting")
+	logrus.Debugf("Watchlog: timer starting")
 
 	for _ = range time.Tick(1 * time.Minute) {
 		go w.notifyHealthchecksIo()
