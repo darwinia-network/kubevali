@@ -23,7 +23,6 @@ func NewWatcher(conf config.Watchlog) *Watcher {
 
 	return &Watcher{
 		Config: conf,
-		LastAt: time.Now(),
 	}
 }
 
@@ -32,14 +31,24 @@ func (w *Watcher) Watch(r io.Reader) {
 
 	for scanner.Scan() {
 		t := scanner.Text()
-		if strings.Contains(t, w.Config.Keyword) {
-			w.LastAt = time.Now()
-			logrus.Infof("Watchlog: detected keyword \"%s\"", w.Config.Keyword)
+		if !strings.Contains(t, w.Config.Keyword) {
+			continue
 		}
+
+		logrus.Infof("Watchlog: detected keyword \"%s\"", w.Config.Keyword)
+
+		if w.LastAt.IsZero() {
+			go w.notifyHealthchecksIo()
+			go w.Timer()
+		}
+
+		w.LastAt = time.Now()
 	}
 }
 
 func (w *Watcher) Timer() {
+	logrus.Debugf("Watchlog.Timer starting")
+
 	for _ = range time.Tick(1 * time.Minute) {
 		go w.notifyHealthchecksIo()
 	}

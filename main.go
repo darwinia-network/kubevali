@@ -43,7 +43,6 @@ func main() {
 		logWatcher := watchlog.NewWatcher(conf.Watchlog)
 		go logWatcher.Watch(io.TeeReader(node.Stdout, os.Stdout))
 		go logWatcher.Watch(io.TeeReader(node.Stderr, os.Stdout)) // Redirect to STDOUT
-		go logWatcher.Timer()
 	} else {
 		go io.Copy(os.Stdout, node.Stdout)
 		go io.Copy(os.Stdout, node.Stderr)
