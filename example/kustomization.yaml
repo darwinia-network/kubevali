@@ -7,6 +7,7 @@ resources:
   - manifests/serviceaccount.yaml
   - manifests/statefulset.yaml
 
+namespace: default
 nameSuffix: -darwinia
 commonLabels:
   app: kubevali
