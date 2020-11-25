@@ -16,8 +16,8 @@ spec:
             storage: 20Gi
 
   template:
-    serviceAccountName: kubevali
     spec:
+      serviceAccountName: kubevali
       enableServiceLinks: false
 
       volumes:
