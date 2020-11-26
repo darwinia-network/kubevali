@@ -33,9 +33,9 @@ jobs:
           registry: quay.io
 
       - run: |
-          COMMIT=$(git rev-parse --short HEAD)
-          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          TAG=$(git describe --tags --abbrev=0 HEAD)
+          COMMIT=$(git rev-parse --short HEAD || true)
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ" || true)
+          TAG=$(git describe --tags --abbrev=0 HEAD || true)
 
           COMMIT=${COMMIT:-NO_COMMIT}
           DATE=${DATE:-NO_DATE}
