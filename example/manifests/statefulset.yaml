@@ -51,6 +51,11 @@ spec:
             - name: config
               mountPath: /config
 
+          command:
+            - /kubevali/kubevali
+            - --config=/config/kubevali.yaml
+            - --log-level=6
+
           ports:
             - name: rpc
               containerPort: 9933
@@ -58,11 +63,18 @@ spec:
               containerPort: 9944
             - name: metrics
               containerPort: 9615
+            - name: healthz
+              containerPort: 49944
 
-          command:
-            - /kubevali/kubevali
-            - --config=/config/kubevali.yaml
-            - --log-level=6
+          livenessProbe:
+            initialDelaySeconds: 120
+            httpGet:
+              path: /healthz_block
+              port: healthz
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: healthz
 
           resources:
             requests:
@@ -71,3 +83,14 @@ spec:
             limits:
               cpu: 500m
               memory: 2Gi
+
+        - name: liveness-probe
+          image: quay.io/darwinia-network/node-liveness-probe
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 50m
+              memory: 20Mi
+            limits:
+              cpu: 200m
+              memory: 50Mi
