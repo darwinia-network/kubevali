@@ -5,11 +5,20 @@
 
 Kubevali (pronounced as *kube-vali*) helps running multiple Darwinia or any substrate-based chain nodes on a Kubernetes cluster.
 
+- [Kubevali](#kubevali)
+  - [The Idea](#the-idea)
+  - [Features](#features)
+  - [Usage](#usage)
+    - [Basics](#basics)
+    - [Integrate with Kubernetes](#integrate-with-kubernetes)
+    - [Watchlog](#watchlog)
+  - [License](#license)
+
 ## The Idea
 
-Usually we use a StatefulSet to deploy chain nodes in Kubernetes clusters and every node uses the same CLI arguments. If the StatefulSet has multiple replicas, we're not able to expose the P2P ports (default 30333) to public. Using a HostPort or enabling hostNetwork can cause conflicts when more than one pods are scheduled to a single Kubernetes node. Unlike centralized service, a chain node has to "know" its P2P address and broadcast the address, so other nodes can connect to our node. Thus, using a NodePort or LoadBalancer service for individual node is not a option either as they requires specifying `--port` or `--public-addr` for every node.
+Usually we use a StatefulSet to deploy chain nodes in Kubernetes clusters and every node uses the same CLI arguments. If the StatefulSet has multiple replicas, we're not able to expose the P2P ports (default 30333) to public. Using a HostPort or enabling hostNetwork can cause conflicts when more than one pods are scheduled to a single Kubernetes node. Unlike centralized service, a chain node has to "know" and broadcast the its IP and P2P port, so other nodes can connect to our node. Thus, using a NodePort or LoadBalancer service for individual node is not an option either, as they require specifying `--port` or `--public-addr` for every node.
 
-To allow chain nodes running in Kubernetes clusters not only having outcoming peers but also incoming peers, we developed kubevali. Kubevali runs as a parent process of the node. Before the "real" node process starts, kubevali reads the `kubevali.yaml` config file and generates the CLI arguments, for example `--port` = `statefulset pod index + 30333`. That way, once we create the NodePort services for individual chain node or directly enable hostNetwork, the chain node knows the correct IP and port, incoming connections can be established.
+To allow chain nodes running in Kubernetes clusters not only having outcoming peers but also incoming peers, we developed kubevali. Kubevali runs as a parent process of the node. Before the "real" node process starts, kubevali reads the `kubevali.yaml` config file and generates the CLI arguments, for example `--port` = `statefulset pod index + 30333`. That way, once we create the NodePort services for individual chain node or directly enable hostNetwork, the node will know the correct address, so incoming connections can be established.
 
 ![architecture.png](https://i.loli.net/2020/11/26/tYnqjNfsMvQe1hu.png)
 
@@ -25,13 +34,13 @@ Beyond that, kubevali has several other features which may help you managing mul
 
 Until `v1` released, kubevali is still under development, any config or CLI options may be changed in future versions.
 
-- Releases: <https://github.com/darwinia-network/kubevali/releases>.
+- Releases: <https://github.com/darwinia-network/kubevali/releases>
 - Docker images: [Quay.io](https://quay.io/repository/darwinia-network/kubevali?tab=tags)
-- Config reference: [./example/kubevali.yaml](example/kubevali.yaml).
+- Config reference: [./example/kubevali.yaml](example/kubevali.yaml)
 
 ### Basics
 
-Kubevali uses a YAML file defining the command-line arguments of the node. This is an alternative solution for paritytech/substrate#6856.
+Kubevali uses a YAML file defining the command-line arguments of the node. This is an alternative solution for [paritytech/substrate#6856](https://github.com/paritytech/substrate/issues/6856).
 
 Also, every flags and options will be rendered before it being passed to the node. This allows users launching a group of instances at once, and some of the args (e.g. `--validator`) persist for all nodes, some of the them may be dynamic or sequential (e.g. `--port`, `--ws-port`, `--rpc-port`).
 
