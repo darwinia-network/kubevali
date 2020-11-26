@@ -71,10 +71,10 @@ spec:
             httpGet:
               path: /healthz_block
               port: healthz
-          readinessProbe:
-            httpGet:
-              path: /readiness
-              port: healthz
+          # readinessProbe:
+          #   httpGet:
+          #     path: /readiness
+          #     port: healthz
 
           resources:
             requests:
