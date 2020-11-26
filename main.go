@@ -15,6 +15,7 @@ import (
 var opts struct {
 	Config   string `long:"config" short:"c" description:"Path to the config file" value-name:"<PATH>" default:"kubevali.yaml"`
 	LogLevel uint32 `long:"log-level" description:"The log level (0 ~ 6), use 5 for debugging, see https://pkg.go.dev/github.com/sirupsen/logrus#Level" value-name:"N" default:"4"`
+	DryRun   bool   `long:"dry-run" description:"Print the final rendered command line and exit"`
 }
 
 var (
@@ -48,13 +49,20 @@ func main() {
 		go io.Copy(os.Stdout, node.Stderr)
 	}
 
+	log.Infof("Starting node: %s", node.ShellCommand())
+
+	if opts.DryRun {
+		log.Debugf("Exit because --dry-run is specified")
+		os.Exit(0)
+	}
+
 	err := node.Run()
 	if exitErr, ok := err.(*exec.ExitError); ok {
-		log.Debugf("Node.Run(): %s", exitErr.Error())
+		log.Debugf("Node exits: %s", exitErr.Error())
 		os.Exit(exitErr.ExitCode())
 	} else if err != nil {
-		log.Fatalf("Node.Run(): %s", err.Error())
+		log.Fatalf("Node exits: %s", err.Error())
 	} else {
-		log.Debug("Node.Run(): OK")
+		log.Debug("Node exits: OK")
 	}
 }

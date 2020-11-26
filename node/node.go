@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/darwinia-network/kubevali/config"
-	"github.com/sirupsen/logrus"
 )
 
 type Node struct {
@@ -43,7 +42,6 @@ func NewNode(conf config.Node) *Node {
 }
 
 func (n *Node) Run() error {
-	logrus.Infof("Starting node with: %s", n.ShellCommand())
 	return n.Cmd.Run()
 }
 
