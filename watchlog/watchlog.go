@@ -18,6 +18,7 @@ type Watcher struct {
 
 	lastAt      time.Time
 	lastAtMutex sync.Mutex
+	lastLogLine string
 }
 
 func NewWatcher(conf config.Watchlog) *Watcher {
@@ -43,6 +44,7 @@ func (w *Watcher) Watch(r io.Reader, streamName string) {
 		w.lastAtMutex.Lock()
 		lastAt := w.lastAt
 		w.lastAt = time.Now()
+		w.lastLogLine = t
 		w.lastAtMutex.Unlock()
 
 		// Start notifying healthchecks.io once first time found keyword
@@ -88,17 +90,24 @@ func (w *Watcher) notifyHealthchecksIo() {
 		Timeout: 10 * time.Second,
 	}
 
-	var uri string
+	var (
+		uri string
+		log string
+	)
+
 	if since := time.Since(w.lastAt); since < w.Config.LastThreshold {
-		logrus.Debugf("Watchlog: %s since last detected keyword, below threshold %s", since, w.Config.LastThreshold)
+		log = fmt.Sprintf("Watchlog: %s since last detected keyword, below threshold %s", since, w.Config.LastThreshold)
 		uri = fmt.Sprintf("http://hc-ping.com/%s", w.Config.HealthcheckID)
 	} else {
-		logrus.Debugf("Watchlog: %s since last detected keyword, above threshold %s", since, w.Config.LastThreshold)
+		log = fmt.Sprintf("Watchlog: %s since last detected keyword, above threshold %s", since, w.Config.LastThreshold)
 		uri = fmt.Sprintf("http://hc-ping.com/%s/fail", w.Config.HealthcheckID)
 	}
 
-	_, err := c.Get(uri)
+	logrus.Debugf(log)
+
+	body := fmt.Sprintf("%s\n\n%s", log, w.lastLogLine)
+	_, err := c.Post(uri, "text/plain", strings.NewReader(body))
 	if err != nil {
-		logrus.Warnf("Client.Get: %s", err)
+		logrus.Warnf("Client.Post: %s", err)
 	}
 }
