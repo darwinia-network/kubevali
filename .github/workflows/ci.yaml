@@ -46,7 +46,7 @@ jobs:
           go get -u github.com/mitchellh/gox
           gox -verbose \
             -output "bin/{{.Dir}}_{{.OS}}_{{.Arch}}" \
-            -osarch "linux/amd64 linux/arm64 linux/arm darwin/amd64 windows/amd64" \
+            -osarch "linux/amd64 linux/arm64 linux/arm darwin/amd64" \
             -ldflags "-X main.buildCommit=${COMMIT} \
                       -X main.buildDate=${DATE} \
                       -X main.buildVersion=${TAG}" \
