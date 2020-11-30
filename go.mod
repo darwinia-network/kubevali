@@ -5,7 +5,7 @@ go 1.15
 require (
 	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.1.0
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/google/gofuzz v1.1.1-0.20200604201612-c04b05f3adfa // indirect
 	github.com/google/uuid v1.1.2 // indirect

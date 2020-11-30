@@ -1,9 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -26,37 +26,25 @@ type NodeTemplate struct {
 	Args    map[string]string
 }
 
-func NewConfig(path string) *Config {
-	viper.SetConfigFile(path)
-
-	if err := viper.ReadInConfig(); err != nil {
-		panic(fmt.Errorf("Unable to load config file: %s", err))
-	}
-
+func Unmarshal() *Config {
 	raw := &RawConfig{}
 	viper.Unmarshal(raw)
-
-	if err := validate(raw); err != nil {
-		panic(err)
-	}
-
+	validateOrDie(raw)
 	return renderOrDie(raw)
 }
 
-func validate(raw *RawConfig) error {
+func validateOrDie(raw *RawConfig) {
 	if len := len(raw.NodeTemplate.Command); len < 1 {
-		return fmt.Errorf("Config nodeTemplate.Command[] should at least have 1 element, got %d", len)
+		logrus.Fatalf("Config nodeTemplate.Command[] should at least have 1 element, got %d", len)
 	}
 
 	if raw.Watchlog.Enabled {
 		if raw.Watchlog.Keyword == "" {
-			return fmt.Errorf("Config watchlog.keyword should not be empty")
+			logrus.Fatalf("Config watchlog.keyword should not be empty")
 		}
 
 		if raw.Watchlog.LastThreshold < 1*time.Second {
-			return fmt.Errorf("Config watchlog.lastThreshold should be at least 1 second, got %s", raw.Watchlog.LastThreshold)
+			logrus.Fatalf("Config watchlog.lastThreshold should be at least 1 second, got %s", raw.Watchlog.LastThreshold)
 		}
 	}
-
-	return nil
 }

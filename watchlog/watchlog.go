@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/darwinia-network/kubevali/config"
@@ -15,7 +16,8 @@ import (
 type Watcher struct {
 	Config config.Watchlog
 
-	LastAt time.Time
+	lastAt      time.Time
+	lastAtMutex sync.Mutex
 }
 
 func NewWatcher(conf config.Watchlog) *Watcher {
@@ -26,8 +28,9 @@ func NewWatcher(conf config.Watchlog) *Watcher {
 	}
 }
 
-func (w *Watcher) Watch(r io.Reader) {
+func (w *Watcher) Watch(r io.Reader, streamName string) {
 	scanner := bufio.NewScanner(r)
+	var timerDone chan bool
 
 	for scanner.Scan() {
 		t := scanner.Text()
@@ -35,24 +38,49 @@ func (w *Watcher) Watch(r io.Reader) {
 			continue
 		}
 
-		logrus.Infof("Watchlog: detected keyword \"%s\"", w.Config.Keyword)
+		logrus.Infof("Watchlog: found keyword \"%s\" in %s", w.Config.Keyword, streamName)
 
-		lastAt := w.LastAt
-		w.LastAt = time.Now()
+		w.lastAtMutex.Lock()
+		lastAt := w.lastAt
+		w.lastAt = time.Now()
+		w.lastAtMutex.Unlock()
 
+		// Start notifying healthchecks.io once first time found keyword
 		if lastAt.IsZero() {
-			go w.notifyHealthchecksIo()
-			go w.Timer()
+			timerDone = w.Timer()
 		}
 	}
+
+	if err := scanner.Err(); err != nil {
+		logrus.Errorf("Watchlog: %s", err)
+	} else {
+		logrus.Debugf("Watchlog: scanner hit EOF")
+	}
+
+	timerDone <- true
 }
 
-func (w *Watcher) Timer() {
+func (w *Watcher) Timer() chan bool {
+	go w.notifyHealthchecksIo()
+
 	logrus.Debugf("Watchlog: timer starting")
 
-	for _ = range time.Tick(1 * time.Minute) {
-		go w.notifyHealthchecksIo()
-	}
+	ticker := time.NewTicker(1 * time.Minute)
+	done := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				logrus.Debugf("Watchlog: timer stopped")
+				return
+			case <-ticker.C:
+				w.notifyHealthchecksIo()
+			}
+		}
+	}()
+
+	return done
 }
 
 func (w *Watcher) notifyHealthchecksIo() {
@@ -61,11 +89,11 @@ func (w *Watcher) notifyHealthchecksIo() {
 	}
 
 	var uri string
-	if since := time.Since(w.LastAt); since < w.Config.LastThreshold {
-		logrus.Debugf("Watchlog: it's been %s since last detected keyword, below threshold %s", since, w.Config.LastThreshold)
+	if since := time.Since(w.lastAt); since < w.Config.LastThreshold {
+		logrus.Debugf("Watchlog: %s since last detected keyword, below threshold %s", since, w.Config.LastThreshold)
 		uri = fmt.Sprintf("http://hc-ping.com/%s", w.Config.HealthcheckID)
 	} else {
-		logrus.Debugf("Watchlog: it's been %s since last detected keyword, above threshold %s", since, w.Config.LastThreshold)
+		logrus.Debugf("Watchlog: %s since last detected keyword, above threshold %s", since, w.Config.LastThreshold)
 		uri = fmt.Sprintf("http://hc-ping.com/%s/fail", w.Config.HealthcheckID)
 	}
 
