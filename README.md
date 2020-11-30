@@ -36,7 +36,7 @@ Until `v1` released, kubevali is still under development, any config or CLI opti
 
 - Releases: <https://github.com/darwinia-network/kubevali/releases>
 - Docker images: [Quay.io](https://quay.io/repository/darwinia-network/kubevali?tab=tags)
-- Config reference: [./example/kubevali.yaml](example/kubevali.yaml)
+- Config reference: [./docs/kubevali.yaml](docs/kubevali.yaml)
 
 ### Basics
 
@@ -87,7 +87,7 @@ Remove `--dry-run` to launch the node once you confirm that the commands are cor
 There're 2 methods deploying kubevali on Kubernetes.
 
 1. Build you own chain node image and add kubevali into the image.
-2. Run kubevali as a `initContainer` first, copy the binary into a `emptyDir` volume, and override the container entrypoint to kubevali by setting Pod `.spec.containers[].command`. Check out [./example](example/) for the full example of this method.
+2. Run kubevali as a `initContainer` first, copy the binary into a `emptyDir` volume, and override the container entrypoint to kubevali by setting Pod `.spec.containers[].command`. Check out [./deploy/manifests](deploy/manifests/) and [./example](example/) for the full example.
 
 ### Watchlog
 

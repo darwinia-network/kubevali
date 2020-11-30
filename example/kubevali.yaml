@@ -1,54 +1,14 @@
-# Watchlog watches node logs and report the status extracted from logs
-# to healthchecks.io
-watchlog:
-  # Whether enable watchlog or not, default: false
-  enabled: true
-
-  # `keyword` is expected appearing in node logs within `lastThreshold`.
-  # Otherwise node is considered as unhealthy.
-  keyword: "Prepared block"
-  lastThreshold: 60m
-
-  # The check ID of healthchecks.io. It is allowed to put multiple IDs here
-  # and kubevali uses the healthcheckIDs[.nodeTemplate.index].
-  healthcheckIDs:
-    - "..."
-
-# The common template for fields in `nodeTemplate`, default: ""
-# Can define complicated blocks and use them later in `nodeTemplate.*`
 commonTemplate: |
   {{- define "nodePort" -}}
   {{ add 30333 .Index }}
   {{- end -}}
 
-# The node template to generate the final command-line arguments running the node
-# All fields in `nodeTemplate` will be rendered once kubevali launches
 nodeTemplate:
-  # Index of the chain node, required.
-  # Used in selecting `healthcheckIDs` and below templates.
-  # This is usually dynamic and generated using environment variable.
   index: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
 
-  # CLI command and following flags of chain node, requires >=1 item
   command:
     - darwinia
-    - --validator
-    # ...
 
-  # Options that will be appended to `command`
   args:
-    # Use node index defined in `index`.
-    # If `.nodeTemplate.index` == 2, this generates: --name '[KUBE-VALI] Development 02'
-    name: '[KUBE-VALI] Development {{ printf "%02d" .Index }}'
-
-    # Use the block defined in `.commonTemplate`.
-    # If `.nodeTemplate.index` == 2, this generates: --port 30335
+    name: '[KUBE-VALI] Example {{ printf "%02d" .Index }}'
     port: '{{ template "nodePort" . }}'
-
-    # Normal option without any template.
-    out-peers: 30
-
-    # Use the helper function `{{ getRandomNodeIP }}`.
-    public-addr: '/ip4/{{ getRandomNodeIP }}/tcp/{{ template "nodePort" . }}'
-
-    # ...
