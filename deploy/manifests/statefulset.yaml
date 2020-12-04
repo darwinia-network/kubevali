@@ -30,7 +30,6 @@ spec:
       initContainers:
         - name: kubevali
           image: quay.io/darwinia-network/kubevali
-          imagePullPolicy: Always
           volumeMounts:
             - name: kubevali
               mountPath: /volume
@@ -42,7 +41,6 @@ spec:
       containers:
         - name: node
           image: quay.io/darwinia-network/darwinia
-          imagePullPolicy: Always
           volumeMounts:
             - name: data
               mountPath: /data
@@ -87,7 +85,6 @@ spec:
 
         - name: liveness-probe
           image: quay.io/darwinia-network/node-liveness-probe
-          imagePullPolicy: Always
           resources:
             requests:
               cpu: 50m
