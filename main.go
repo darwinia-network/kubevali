@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -91,7 +92,8 @@ func kubevali(conf *config.Config, ctx context.Context) int {
 
 	err := node.Run(ctx)
 
-	if exitErr, ok := err.(*exec.ExitError); ok {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
 		logrus.Debugf("Node exits: %s", exitErr)
 		return exitErr.ExitCode()
 	}
