@@ -13,14 +13,12 @@ import (
 	"github.com/darwinia-network/kubevali/watchlog"
 	"github.com/fsnotify/fsnotify"
 	flags "github.com/jessevdk/go-flags"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
 var opts struct {
 	Config      string `long:"config" short:"c" description:"Path to the config file" value-name:"<PATH>" default:"kubevali.yaml"`
 	WatchConfig bool   `long:"watch-config" short:"w" description:"Watch config file changes and restart node with new config"`
-	LogLevel    uint32 `long:"log-level" description:"The log level (0 ~ 6), use 5 for debugging, see https://pkg.go.dev/github.com/sirupsen/logrus#Level" value-name:"N" default:"4"`
 	DryRun      bool   `long:"dry-run" description:"Print the final rendered command line and exit"`
 }
 
@@ -35,18 +33,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	logrus.SetFormatter(&logrus.TextFormatter{
-		DisableQuote:     true,
-		DisableTimestamp: true,
-	})
-	logrus.SetOutput(os.Stderr)
-	logrus.SetLevel(logrus.Level(opts.LogLevel))
-	logrus.Infof("Kubevali %v-%v (built %v)", buildVersion, buildCommit, buildDate)
-
 	viper.SetConfigFile(opts.Config)
 
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Fatalf("Unable to load config file: %s", err)
+		log.Fatalf("Unable to load config file: %s", err)
 	}
 
 	if opts.WatchConfig {
@@ -64,6 +54,10 @@ func main() {
 		})
 
 		conf := config.Unmarshal()
+		defer conf.Logger.Sync()
+
+		conf.Logger.Infof("Kubevali %v-%v (built %v)", buildVersion, buildCommit, buildDate)
+
 		status := kubevali(conf, ctx)
 		if !configChanged || status != 0 {
 			os.Exit(status)
@@ -72,10 +66,10 @@ func main() {
 }
 
 func kubevali(conf *config.Config, ctx context.Context) int {
-	node := node.NewNode(conf.Node)
+	node := node.NewNode(conf)
 
 	if conf.Watchlog.Enabled {
-		logWatcher := watchlog.NewWatcher(conf.Watchlog)
+		logWatcher := watchlog.NewWatcher(conf)
 		go logWatcher.Watch(io.TeeReader(node.Stdout, os.Stdout), "stdout")
 		go logWatcher.Watch(io.TeeReader(node.Stderr, os.Stdout), "stderr") // Redirect to STDOUT
 	} else {
@@ -83,10 +77,10 @@ func kubevali(conf *config.Config, ctx context.Context) int {
 		go io.Copy(os.Stdout, node.Stderr)
 	}
 
-	logrus.Infof("Starting node: %s", node.ShellCommand())
+	conf.Logger.Infof("Starting node: %s", node.ShellCommand())
 
 	if opts.DryRun {
-		logrus.Debugf("Exit because --dry-run is specified")
+		conf.Logger.Debugf("Exit because --dry-run is specified")
 		os.Exit(0)
 	}
 
@@ -94,14 +88,14 @@ func kubevali(conf *config.Config, ctx context.Context) int {
 
 	var exitErr *exec.ExitError
 	if errors.As(err, &exitErr) {
-		logrus.Debugf("Node exits: %s", exitErr)
+		conf.Logger.Debugf("Node exits: %s", exitErr)
 		return exitErr.ExitCode()
 	}
 
 	if err != nil {
-		log.Fatalf("Node exits: %s", err)
+		conf.Logger.Fatalf("Node exits: %s", err)
 	}
 
-	logrus.Debug("Node exits: OK")
+	conf.Logger.Debug("Node exits: OK")
 	return 0
 }

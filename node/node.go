@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/darwinia-network/kubevali/config"
-	"github.com/sirupsen/logrus"
 )
 
 type Node struct {
@@ -21,18 +20,18 @@ type Node struct {
 	Stderr io.Reader
 }
 
-func NewNode(conf config.Node) *Node {
-	cmd := exec.Command(conf.Command[0], conf.Command[1:]...)
+func NewNode(conf *config.Config) *Node {
+	cmd := exec.Command(conf.Node.Command[0], conf.Node.Command[1:]...)
 	cmd.Stdin = os.Stdin
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		logrus.Fatalf("Unable to pipe stdout: %s", err)
+		conf.Logger.Fatalf("Unable to pipe stdout: %s", err)
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		logrus.Fatalf("Unable to pipe stderr: %s", err)
+		conf.Logger.Fatalf("Unable to pipe stderr: %s", err)
 	}
 
 	node := &Node{

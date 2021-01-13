@@ -1,9 +1,9 @@
 package config
 
 import (
+	"log"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -11,6 +11,7 @@ type RawConfig struct {
 	CommonTemplate string
 	NodeTemplate   NodeTemplate
 	Watchlog       RawWatchlog
+	Logging        interface{}
 }
 
 type RawWatchlog struct {
@@ -35,16 +36,16 @@ func Unmarshal() *Config {
 
 func validateOrDie(raw *RawConfig) {
 	if len := len(raw.NodeTemplate.Command); len < 1 {
-		logrus.Fatalf("Config nodeTemplate.Command[] should at least have 1 element, got %d", len)
+		log.Fatalf("Config nodeTemplate.Command[] should at least have 1 element, got %d", len)
 	}
 
 	if raw.Watchlog.Enabled {
 		if raw.Watchlog.Keyword == "" {
-			logrus.Fatalf("Config watchlog.keyword should not be empty")
+			log.Fatalf("Config watchlog.keyword should not be empty")
 		}
 
 		if raw.Watchlog.LastThreshold < 1*time.Second {
-			logrus.Fatalf("Config watchlog.lastThreshold should be at least 1 second, got %s", raw.Watchlog.LastThreshold)
+			log.Fatalf("Config watchlog.lastThreshold should be at least 1 second, got %s", raw.Watchlog.LastThreshold)
 		}
 	}
 }

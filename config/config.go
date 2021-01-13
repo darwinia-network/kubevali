@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,12 +9,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type Config struct {
 	Node     Node
 	Watchlog Watchlog
+	Logger   *zap.SugaredLogger
 }
 
 type Watchlog struct {
@@ -28,19 +30,36 @@ type Node struct {
 	Command []string
 }
 
+func initializeLogger(loggingConfig interface{}) *zap.SugaredLogger {
+	var zapConfig zap.Config
+	if bytes, err := json.Marshal(loggingConfig); err != nil {
+		log.Fatalf("Failed to read logging config: %s", err)
+	} else if err := json.Unmarshal(bytes, &zapConfig); err != nil {
+		log.Fatalf("Failed to read logging config: %s", err)
+	}
+	logger, err := zapConfig.Build()
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %s", err)
+	}
+	return logger.Sugar()
+}
+
 func renderOrDie(raw *RawConfig) *Config {
+	// Logger
+	logger := initializeLogger(raw.Logging)
+
 	baseTemplate := template.New("")
 	initTemplateFuncMap(baseTemplate)
 	baseTemplate, err := baseTemplate.Parse(raw.CommonTemplate)
 	if err != nil {
-		logrus.Fatalf("Unable to parse common template: %s", err)
+		logger.Fatalf("Unable to parse common template: %s", err)
 	}
 
 	node := Node{}
 	{ // Index
-		s := renderValueOrDie(baseTemplate, raw.NodeTemplate.Index, node)
+		s := renderValueOrDie(logger, baseTemplate, raw.NodeTemplate.Index, node)
 		if idx, err := strconv.Atoi(s); err != nil {
-			log.Fatalf("Unable to convert .nodeTemplate.index to int: %s", err)
+			logger.Fatalf("Unable to convert .nodeTemplate.index to int: %s", err)
 		} else {
 			node.Index = idx
 		}
@@ -49,12 +68,12 @@ func renderOrDie(raw *RawConfig) *Config {
 	{ // Command
 		var cmd []string
 		for _, value := range raw.NodeTemplate.Command {
-			v := renderValueOrDie(baseTemplate, value, node)
+			v := renderValueOrDie(logger, baseTemplate, value, node)
 			cmd = append(cmd, v)
 		}
 		for key, value := range raw.NodeTemplate.Args {
 			a := fmt.Sprintf("--%s", key)
-			v := renderValueOrDie(baseTemplate, value, node)
+			v := renderValueOrDie(logger, baseTemplate, value, node)
 			cmd = append(cmd, a, v)
 		}
 		node.Command = cmd
@@ -68,7 +87,7 @@ func renderOrDie(raw *RawConfig) *Config {
 	if raw.Watchlog.Enabled {
 		// Watchlog.HealthcheckID
 		if n := len(raw.Watchlog.HealthcheckIDs); node.Index >= n {
-			log.Fatalf("No enough healthcheck IDs, expect %d, got %d", node.Index+1, n)
+			logger.Fatalf("No enough healthcheck IDs, expect %d, got %d", node.Index+1, n)
 		}
 		watchlog.HealthcheckID = raw.Watchlog.HealthcheckIDs[node.Index]
 	}
@@ -76,26 +95,35 @@ func renderOrDie(raw *RawConfig) *Config {
 	conf := &Config{
 		Node:     node,
 		Watchlog: watchlog,
+		Logger:   logger,
 	}
 	return conf
 }
 
-func renderValueOrDie(baseTemplate *template.Template, text string, data interface{}) string {
+func renderValue(baseTemplate *template.Template, text string, data interface{}) (string, error) {
 	t, err := baseTemplate.Clone()
 	if err != nil {
-		log.Fatalf("Unable to clone template: %s", err)
+		return "", fmt.Errorf("Unable to clone template: %w", err)
 	}
 
 	t, err = t.New("").Parse(text)
 	if err != nil {
-		log.Fatalf("Unable to parse template: %s", err)
+		return "", fmt.Errorf("Unable to parse template: %w", err)
 	}
 
 	var buf strings.Builder
 	err = t.Execute(&buf, data)
 	if err != nil {
-		log.Fatalf("Unable to render template: %s ", err)
+		return "", fmt.Errorf("Unable to render template: %w", err)
 	}
 
-	return buf.String()
+	return buf.String(), nil
+}
+
+func renderValueOrDie(logger *zap.SugaredLogger, baseTemplate *template.Template, text string, data interface{}) string {
+	v, err := renderValue(baseTemplate, text, data)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	return v
 }
