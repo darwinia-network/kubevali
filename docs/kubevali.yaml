@@ -52,3 +52,13 @@ nodeTemplate:
     public-addr: '/ip4/{{ getRandomNodeIP }}/tcp/{{ template "nodePort" . }}'
 
     # ...
+
+# The logging options, inherited from zap.
+# See https://pkg.go.dev/go.uber.org/zap#Config
+logging:
+  level: debug # See https://pkg.go.dev/go.uber.org/zap/zapcore#Level
+  encoding: json # Or console, see encoderConfig for more options.
+  outputPaths: [stderr]
+  errorOutputPaths: [stderr]
+  initialFields:
+    app: kubevali
