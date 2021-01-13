@@ -31,7 +31,7 @@ type Node struct {
 }
 
 func initializeLogger(loggingConfig interface{}) *zap.SugaredLogger {
-	var zapConfig zap.Config
+	zapConfig := zap.NewProductionConfig()
 	if bytes, err := json.Marshal(loggingConfig); err != nil {
 		log.Fatalf("Failed to read logging config: %s", err)
 	} else if err := json.Unmarshal(bytes, &zapConfig); err != nil {
