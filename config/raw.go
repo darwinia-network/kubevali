@@ -11,6 +11,8 @@ type RawConfig struct {
 	CommonTemplate string
 	NodeTemplate   NodeTemplate
 	Watchlog       RawWatchlog
+	NodeStdout     string
+	NodeStderr     string
 	Logging        interface{}
 }
 

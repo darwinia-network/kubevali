@@ -70,11 +70,11 @@ func kubevali(conf *config.Config, ctx context.Context) int {
 
 	if conf.Watchlog.Enabled {
 		logWatcher := watchlog.NewWatcher(conf)
-		go logWatcher.Watch(io.TeeReader(node.Stdout, os.Stdout), "stdout")
-		go logWatcher.Watch(io.TeeReader(node.Stderr, os.Stdout), "stderr") // Redirect to STDOUT
+		go logWatcher.Watch(io.TeeReader(node.Stdout, conf.Node.Stdout), "stdout")
+		go logWatcher.Watch(io.TeeReader(node.Stderr, conf.Node.Stderr), "stderr")
 	} else {
-		go io.Copy(os.Stdout, node.Stdout)
-		go io.Copy(os.Stdout, node.Stderr)
+		go io.Copy(conf.Node.Stdout, node.Stdout)
+		go io.Copy(conf.Node.Stderr, node.Stderr)
 	}
 
 	conf.Logger.Infof("Starting node: %s", node.ShellCommand())

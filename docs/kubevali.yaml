@@ -53,6 +53,11 @@ nodeTemplate:
 
     # ...
 
+# Where the outputs of node being redirect to.
+# Can be either "stdout" or "stderr", default: "stdout"
+nodeStdout: stdout
+nodeStderr: stdout
+
 # The logging options, inherited from zap.
 # See https://pkg.go.dev/go.uber.org/zap#Config
 logging:

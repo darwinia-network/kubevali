@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"text/template"
@@ -26,6 +27,9 @@ type Watchlog struct {
 }
 
 type Node struct {
+	Stdout *os.File
+	Stderr *os.File
+
 	Index   int
 	Command []string
 }
@@ -56,6 +60,23 @@ func renderOrDie(raw *RawConfig) *Config {
 	}
 
 	node := Node{}
+	{ // Stdout & Stderr
+		f := func(s string) *os.File {
+			switch s {
+			case "stdout":
+				return os.Stdout
+			case "stderr":
+				return os.Stderr
+			case "":
+				return os.Stdout
+			}
+			logger.Fatalf("Invalid node log output: %s", s)
+			return nil
+		}
+		node.Stdout = f(raw.NodeStdout)
+		node.Stderr = f(raw.NodeStderr)
+	}
+
 	{ // Index
 		s := renderValueOrDie(logger, baseTemplate, raw.NodeTemplate.Index, node)
 		if idx, err := strconv.Atoi(s); err != nil {
