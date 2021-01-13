@@ -53,7 +53,6 @@ spec:
             - /kubevali/kubevali
             - --config=/config/kubevali.yaml
             - --watch-config
-            - --log-level=6
 
           ports:
             - name: rpc
