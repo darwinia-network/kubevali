@@ -48,8 +48,9 @@ Here is an example minimal config:
 
 ```yaml
 nodeTemplate:
-  # The index of the node, usually obtained from env vars
-  index: '{{ env "NODE_INDEX" }}'
+  # The index of the node
+  # Usually the Pod's ordinal index of StatefulSet in Kubernetes
+  index: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
 
   # CLI command and following arguments for chain node
   command:
@@ -74,7 +75,7 @@ nodeTemplate:
 Save the config to `./kubevali.yaml` and run:
 
 ```bash
-$ NODE_INDEX=2 kubevali --dry-run
+$ HOSTNAME=sts-pod-2 kubevali --dry-run
 
 ...
 INFO Starting node: "darwinia" "--validator" "--name" "[KUBE-VALI] Development 02" "--port" "30335" "--rpc-port" "9935" "--ws-port" "9946"

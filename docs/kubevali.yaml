@@ -24,9 +24,11 @@ commonTemplate: |
 # The node template to generate the final command-line arguments running the node
 # All fields in `nodeTemplate` will be rendered once kubevali launches
 nodeTemplate:
-  # Index of the chain node, required.
-  # Used in selecting `healthcheckIDs` and below templates.
-  # This is usually dynamic and generated using environment variable.
+  # Index of the chain node to select `healthcheckIDs` and can be used in
+  # the following templates. This is usually dynamic and obtained from
+  # environment variables.
+  # The example below uses the Pod's ordinal index of StatefulSet in Kubernetes.
+  # See https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#examining-the-pod-s-ordinal-index
   index: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
 
   # CLI command and following flags of chain node, requires >=1 item
