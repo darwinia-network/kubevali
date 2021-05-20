@@ -1,5 +1,7 @@
+#
 # Watchlog watches node logs and report the status extracted from logs
 # to healthchecks.io
+#
 watchlog:
   # Whether enable watchlog or not, default: false
   enabled: true
@@ -14,20 +16,25 @@ watchlog:
   healthcheckIDs:
     - "..."
 
+#
 # The common template for fields in `nodeTemplate`, default: ""
 # Can define complicated blocks and use them later in `nodeTemplate.*`
+#
 commonTemplate: |
   {{- define "nodePort" -}}
   {{ add 30333 .Index }}
   {{- end -}}
 
+#
 # The node template to generate the final command-line arguments running the node
 # All fields in `nodeTemplate` will be rendered once kubevali launches
+#
 nodeTemplate:
   # Index of the chain node to select `healthcheckIDs` and can be used in
   # the following templates. This is usually dynamic and obtained from
-  # environment variables.
-  # The example below uses the Pod's ordinal index of StatefulSet in Kubernetes.
+  # environment variables, default: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
+  #
+  # The default template extracts the Pod's ordinal index of StatefulSet in Kubernetes.
   # See https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#examining-the-pod-s-ordinal-index
   index: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
 

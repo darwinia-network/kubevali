@@ -4,8 +4,6 @@ commonTemplate: |
   {{- end -}}
 
 nodeTemplate:
-  index: '{{ env "HOSTNAME" | splitList "-" | mustLast }}'
-
   command:
     - darwinia
 

@@ -78,7 +78,11 @@ func renderOrDie(raw *RawConfig) *Config {
 	}
 
 	{ // Index
-		s := renderValueOrDie(logger, baseTemplate, raw.NodeTemplate.Index, node)
+		idxTemplate := raw.NodeTemplate.Index
+		if idxTemplate == "" {
+			idxTemplate = `{{ env "HOSTNAME" | splitList "-" | mustLast }}`
+		}
+		s := renderValueOrDie(logger, baseTemplate, idxTemplate, node)
 		if idx, err := strconv.Atoi(s); err != nil {
 			logger.Fatalf("Unable to convert .nodeTemplate.index to int: %s", err)
 		} else {
