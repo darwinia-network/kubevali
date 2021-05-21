@@ -59,14 +59,18 @@ nodeTemplate:
     # more flags here...
 
   args:
-    # If `.nodeTemplate.index` == 2, this generates:
-    #  --name '[KUBE-VALI] Development 02'
+    # The value of .Index is Pod's ordinal index of StatefulSet, extracted
+    # from Pod name. For example let's say the StatefulSet is `sts-pod` and
+    # the Pod is `sts-pod-2`, the .Index would be 2.
+
+    # For example .Index is 2, this generates:
+    #   --name '[KUBE-VALI] Development 02'
     name: '[KUBE-VALI] Development {{ printf "%02d" .Index }}'
 
-    # If `.nodeTemplate.index` == 2, this generates:
-    #  --port     30335
-    #  --rpc-port 9935
-    #  --ws-port  9946
+    # For example .Index is 2, this generates:
+    #   --port     30335
+    #   --rpc-port 9935
+    #   --ws-port  9946
     port: '{{ add 30333 .Index }}'
     rpc-port: '{{ add 9933 .Index }}'
     ws-port: '{{ add 9944 .Index }}'

@@ -17,15 +17,23 @@ watchlog:
     - "..."
 
 #
-# Create (or update) a NodePort service when starting the chain node to
-# expose the P2P port of the Pod
+# Create (or update) a Kubernetes NodePort service when starting the chain node
+# to expose the P2P port of the Pod
 #
-# Currently the Pod name is extracted from $HOSTNAME and the service name
-# is the Pod name
+# Currently the Pod name is extracted from $HOSTNAME and the Kubernetes Service
+# name would be the same as the Pod name
 #
 nodeService:
-  enabled: true
-  forceUpdate: true
+  # Whether enable NodePort service or not, default: false
+  enabled: false
+
+  # Whether update the service even it is not created by kubevali, default: false
+  forceUpdate: false
+
+  # The template of Kubernetes Service fields
+  #  .spec.ports.[*].nodePort
+  #  .spec.ports.[*].targetPort
+  # Usually the same as `.nodeTemplate.args.port`
   nodePortTemplate: '{{ template "nodePort" . }}'
 
 #
