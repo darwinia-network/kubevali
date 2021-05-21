@@ -10,7 +10,7 @@ Kubevali (pronounced as *kube-vali*) helps running multiple Darwinia or any subs
   - [Features](#features)
   - [Usage](#usage)
     - [Basics](#basics)
-    - [Integrate with Kubernetes](#integrate-with-kubernetes)
+    - [Integration with Kubernetes](#integration-with-kubernetes)
     - [Watchlog](#watchlog)
   - [License](#license)
 
@@ -83,7 +83,7 @@ INFO Starting node: "darwinia" "--validator" "--name" "[KUBE-VALI] Development 0
 
 Remove `--dry-run` to launch the node once you confirm that the commands are correct. You can also specify the config file path using `-c, --config PATH`.
 
-### Integrate with Kubernetes
+### Integration with Kubernetes
 
 There're 2 methods deploying kubevali on Kubernetes.
 

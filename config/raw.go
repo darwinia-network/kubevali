@@ -10,6 +10,7 @@ import (
 type RawConfig struct {
 	CommonTemplate string
 	NodeTemplate   NodeTemplate
+	NodeService    RawNodeService
 	Watchlog       RawWatchlog
 	NodeStdout     string
 	NodeStderr     string
@@ -27,6 +28,12 @@ type NodeTemplate struct {
 	Index   string
 	Command []string
 	Args    map[string]string
+}
+
+type RawNodeService struct {
+	Enabled          bool
+	NodePortTemplate string
+	ForceUpdate      bool
 }
 
 func Unmarshal() *Config {

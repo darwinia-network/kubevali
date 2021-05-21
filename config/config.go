@@ -14,9 +14,10 @@ import (
 )
 
 type Config struct {
-	Node     Node
-	Watchlog Watchlog
-	Logger   *zap.SugaredLogger
+	Node        Node
+	NodeService NodeService
+	Watchlog    Watchlog
+	Logger      *zap.SugaredLogger
 }
 
 type Watchlog struct {
@@ -32,6 +33,12 @@ type Node struct {
 
 	Index   int
 	Command []string
+}
+
+type NodeService struct {
+	Enabled     bool
+	NodePort    int
+	ForceUpdate bool
 }
 
 func initializeLogger(loggingConfig interface{}) *zap.SugaredLogger {
@@ -104,6 +111,20 @@ func renderOrDie(raw *RawConfig) *Config {
 		node.Command = cmd
 	}
 
+	nodeService := NodeService{
+		Enabled:     raw.NodeService.Enabled,
+		ForceUpdate: raw.NodeService.ForceUpdate,
+	}
+	if nodeService.Enabled {
+		// NodeService.NodePort
+		s := renderValueOrDie(logger, baseTemplate, raw.NodeService.NodePortTemplate, node)
+		if port, err := strconv.Atoi(s); err != nil {
+			logger.Fatalf("Unable to convert .nodeService.nodePortTemplate to int: %s", err)
+		} else {
+			nodeService.NodePort = port
+		}
+	}
+
 	watchlog := Watchlog{
 		Enabled:       raw.Watchlog.Enabled,
 		Keyword:       raw.Watchlog.Keyword,
@@ -118,9 +139,10 @@ func renderOrDie(raw *RawConfig) *Config {
 	}
 
 	conf := &Config{
-		Node:     node,
-		Watchlog: watchlog,
-		Logger:   logger,
+		Node:        node,
+		NodeService: nodeService,
+		Watchlog:    watchlog,
+		Logger:      logger,
 	}
 	return conf
 }

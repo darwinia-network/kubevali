@@ -10,6 +10,7 @@ import (
 
 	"github.com/darwinia-network/kubevali/config"
 	"github.com/darwinia-network/kubevali/node"
+	"github.com/darwinia-network/kubevali/nodesvc"
 	"github.com/darwinia-network/kubevali/watchlog"
 	"github.com/fsnotify/fsnotify"
 	flags "github.com/jessevdk/go-flags"
@@ -66,6 +67,8 @@ func main() {
 }
 
 func kubevali(conf *config.Config, ctx context.Context) int {
+	nodesvc.CreateOrUpdate(conf)
+
 	node := node.NewNode(conf)
 
 	if conf.Watchlog.Enabled {

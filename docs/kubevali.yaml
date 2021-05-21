@@ -17,6 +17,18 @@ watchlog:
     - "..."
 
 #
+# Create (or update) a NodePort service when starting the chain node to
+# expose the P2P port of the Pod
+#
+# Currently the Pod name is extracted from $HOSTNAME and the service name
+# is the Pod name
+#
+nodeService:
+  enabled: true
+  forceUpdate: true
+  nodePortTemplate: '{{ template "nodePort" . }}'
+
+#
 # The common template for fields in `nodeTemplate`, default: ""
 # Can define complicated blocks and use them later in `nodeTemplate.*`
 #
