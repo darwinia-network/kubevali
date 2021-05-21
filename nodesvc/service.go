@@ -15,11 +15,13 @@ import (
 const (
 	annotationKey   = "kubeva.li/managed-by"
 	annotationValue = "kubevali"
+	portName        = "p2p"
+	portValue       = 30333
 )
 
 func CreateOrUpdate(conf *config.Config) {
 	if !conf.NodeService.Enabled {
-		conf.Logger.Infof("Node service is disabled, skipped create a service")
+		conf.Logger.Infof("Node service is disabled, skipped sync the service")
 		return
 	}
 
@@ -88,8 +90,8 @@ func CreateOrUpdate(conf *config.Config) {
 	svc.Spec.Selector = pod.Labels
 
 	svcPort := corev1.ServicePort{
-		Name:       "p2p",
-		Port:       30333,
+		Name:       portName,
+		Port:       portValue,
 		NodePort:   int32(conf.NodeService.NodePort),
 		TargetPort: intstr.FromInt(conf.NodeService.NodePort),
 	}
