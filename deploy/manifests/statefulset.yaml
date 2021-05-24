@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: kubevali
 spec:
-  serviceName: kubevali
+  serviceName: kubevali-headless
   replicas: 1
 
   volumeClaimTemplates:
