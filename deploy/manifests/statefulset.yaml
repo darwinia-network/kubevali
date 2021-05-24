@@ -67,7 +67,7 @@ spec:
           livenessProbe:
             initialDelaySeconds: 120
             httpGet:
-              path: /healthz_block
+              path: /healthz
               port: healthz
           # readinessProbe:
           #   httpGet:
