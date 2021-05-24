@@ -38,7 +38,7 @@ spec:
             - name: snapshot
               mountPath: /snapshot
 
-        - name: kubevali
+        - name: init-kubevali
           image: quay.io/darwinia-network/kubevali
           volumeMounts:
             - name: kubevali
