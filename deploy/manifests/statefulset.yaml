@@ -21,6 +21,8 @@ spec:
       enableServiceLinks: false
 
       volumes:
+        - name: snapshot
+          emptyDir: {}
         - name: kubevali
           emptyDir: {}
         - name: config
@@ -28,6 +30,14 @@ spec:
             name: kubevali
 
       initContainers:
+        - name: init-snapshot
+          image: quay.io/darwinia-network/snapshot-init-container
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: snapshot
+              mountPath: /snapshot
+
         - name: kubevali
           image: quay.io/darwinia-network/kubevali
           volumeMounts:

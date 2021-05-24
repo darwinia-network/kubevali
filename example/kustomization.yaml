@@ -17,6 +17,8 @@ images:
     newTag: v0.10.0
   - name: quay.io/darwinia-network/node-liveness-probe
     newTag: v0.5.1
+  - name: quay.io/darwinia-network/snapshot-init-container
+    newTag: v0.1.0
 
 configMapGenerator:
   - name: kubevali
