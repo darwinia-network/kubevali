@@ -64,11 +64,18 @@ spec:
             - name: healthz
               containerPort: 49944
 
-          livenessProbe:
-            initialDelaySeconds: 120
+          startupProbe:
             httpGet:
               path: /healthz
               port: healthz
+            failureThreshold: 30
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+
           # readinessProbe:
           #   httpGet:
           #     path: /readiness
