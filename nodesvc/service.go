@@ -72,11 +72,15 @@ func CreateOrUpdate(conf *config.Config) {
 		}
 	}
 
+	svcLabelSelector := pod.Labels
+	delete(svcLabelSelector, "controller-revision-hash")
+	conf.Logger.Debugf("Generated service label selectors are %v", svcLabelSelector)
+
 	if !svcExists {
 		svc = &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   podName,
-				Labels: pod.Labels,
+				Labels: svcLabelSelector,
 			},
 		}
 	}
@@ -87,7 +91,7 @@ func CreateOrUpdate(conf *config.Config) {
 	svc.Annotations[annotationKey] = annotationValue
 
 	svc.Spec.Type = "NodePort"
-	svc.Spec.Selector = pod.Labels
+	svc.Spec.Selector = svcLabelSelector
 
 	svcPort := corev1.ServicePort{
 		Name:       portName,
