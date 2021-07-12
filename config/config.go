@@ -101,12 +101,16 @@ func renderOrDie(raw *RawConfig) *Config {
 		var cmd []string
 		for _, value := range raw.NodeTemplate.Command {
 			v := renderValueOrDie(logger, baseTemplate, value, node)
-			cmd = append(cmd, v)
+			if v != "" {
+				cmd = append(cmd, v)
+			}
 		}
 		for key, value := range raw.NodeTemplate.Args {
-			a := fmt.Sprintf("--%s", key)
 			v := renderValueOrDie(logger, baseTemplate, value, node)
-			cmd = append(cmd, a, v)
+			if v != "" {
+				a := fmt.Sprintf("--%s", key)
+				cmd = append(cmd, a, v)
+			}
 		}
 		node.Command = cmd
 	}
