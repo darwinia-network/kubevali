@@ -9,9 +9,10 @@ Kubevali (pronounced as *kube-vali*) helps running multiple Darwinia or any subs
   - [The Idea](#the-idea)
   - [Features](#features)
   - [Usage](#usage)
+    - [Deploy on Kubernetes](#deploy-on-kubernetes)
     - [Basics](#basics)
-    - [Integration with Kubernetes](#integration-with-kubernetes)
     - [Watchlog](#watchlog)
+  - [Kubevali DevOps Suite](#kubevali-devops-suite)
   - [License](#license)
 
 ## The Idea
@@ -38,13 +39,20 @@ Until `v1` released, kubevali is still under development, any config or CLI opti
 - Docker images: [Quay.io](https://quay.io/repository/darwinia-network/kubevali?tab=tags)
 - Config reference: [./docs/kubevali.yaml](docs/kubevali.yaml)
 
+### Deploy on Kubernetes
+
+There're 2 methods deploying kubevali on Kubernetes.
+
+1. Build you own chain node image and add kubevali into the image.
+2. Run kubevali as a `initContainer`, which copies the binary into a `emptyDir` volume, and override the entrypoint to kubevali by setting container's command (`.spec.containers[x].command` in Pod). Check out [./deploy](deploy/) for a full example.
+
 ### Basics
 
 Kubevali uses a YAML file defining the command-line arguments of the node. This is an alternative solution for [paritytech/substrate#6856](https://github.com/paritytech/substrate/issues/6856).
 
 Also, every flags and options will be rendered before it being passed to the node. This allows users launching a group of instances at once, and some of the args (e.g. `--validator`) persist for all nodes, some of the them may be dynamic or sequential (e.g. `--port`, `--ws-port`, `--rpc-port`).
 
-Here is an example minimal config:
+Here is an example basic config:
 
 ```yaml
 nodeTemplate:
@@ -87,13 +95,6 @@ INFO Starting node: "darwinia" "--validator" "--name" "[KUBE-VALI] Development 0
 
 Remove `--dry-run` to launch the node once you confirm that the commands are correct. You can also specify the config file path using `-c, --config PATH`.
 
-### Integration with Kubernetes
-
-There're 2 methods deploying kubevali on Kubernetes.
-
-1. Build you own chain node image and add kubevali into the image.
-2. Run kubevali as a `initContainer` first, copy the binary into a `emptyDir` volume, and override the container entrypoint to kubevali by setting Pod `.spec.containers[].command`. Check out [./deploy/manifests](deploy/manifests/) and [./example](example/) for the full example.
-
 ### Watchlog
 
 Watchlog is a feature that actively watches and monitors the chain node logs. Kubevali expects a certain `keyword` should appears in logs in a period `lastThreshold`.
@@ -121,6 +122,13 @@ watchlog:
 nodeTemplate:
   index: 0 # This indicates that the first check ID `check_id_0` will be used
 ```
+
+## Kubevali DevOps Suite
+
+- https://github.com/darwinia-network/kubevali
+- https://github.com/darwinia-network/node-liveness-probe
+- https://github.com/darwinia-network/chain-state-exporter
+- https://github.com/darwinia-network/snapshot-init-container
 
 ## License
 
