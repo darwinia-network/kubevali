@@ -51,6 +51,12 @@ func (r *TemplateRenderer) RenderCommandOrDie(text string, cmd []string, flagNam
 	if flagName == "" {
 		return append(cmd, v)
 	} else {
-		return append(cmd, fmt.Sprintf("--%s", flagName), v)
+		var dashedFlagName string
+		if len(flagName) == 1 {
+			dashedFlagName = fmt.Sprintf("-%s", flagName)
+		} else {
+			dashedFlagName = fmt.Sprintf("--%s", flagName)
+		}
+		return append(cmd, dashedFlagName, v)
 	}
 }
