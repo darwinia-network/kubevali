@@ -64,7 +64,7 @@ nodeTemplate:
     - --validator
     # ...
 
-  # Options that will be appended to `command`
+  # CLI arguments that will be appended to `command`
   args:
     # Use node index defined in `index`.
     # If `.nodeTemplate.index` == 2, this generates: --name '[KUBE-VALI] Development 02'
@@ -74,12 +74,18 @@ nodeTemplate:
     # If `.nodeTemplate.index` == 2, this generates: --port 30335
     port: '{{ template "nodePort" . }}'
 
-    # Normal option without any template.
+    # Normal argument without any template.
+    # Supported types: string, numeric, and bool
     out-peers: 30
 
     # Use the helper function `{{ getRandomNodeIP }}`.
     public-addr: '/ip4/{{ getRandomNodeIP }}/tcp/{{ template "nodePort" . }}'
 
+    # Array argument with multiple values, this generates:
+    # --listen-addr /ip4/0.0.0.0/tcp/30333 --listen-addr /ip4/0.0.0.0/tcp/30334/ws
+    listen-addr:
+      - /ip4/0.0.0.0/tcp/30333
+      - /ip4/0.0.0.0/tcp/30334/ws
     # ...
 
 # Where the outputs of node being redirect to.

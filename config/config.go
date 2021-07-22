@@ -2,11 +2,10 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
-	"strings"
 	"text/template"
 	"time"
 
@@ -84,12 +83,19 @@ func renderOrDie(raw *RawConfig) *Config {
 		node.Stderr = f(raw.NodeStderr)
 	}
 
+	// Renderer
+	render := &TemplateRenderer{
+		BaseTemplate: baseTemplate,
+		Logger:       logger,
+		Data:         node,
+	}
+
 	{ // Index
 		idxTemplate := raw.NodeTemplate.Index
 		if idxTemplate == "" {
 			idxTemplate = `{{ env "HOSTNAME" | splitList "-" | mustLast }}`
 		}
-		s := renderValueOrDie(logger, baseTemplate, idxTemplate, node)
+		s := render.RenderValueOrDie(idxTemplate)
 		if idx, err := strconv.Atoi(s); err != nil {
 			logger.Fatalf("Unable to convert .nodeTemplate.index to int: %s", err)
 		} else {
@@ -100,16 +106,27 @@ func renderOrDie(raw *RawConfig) *Config {
 	{ // Command
 		var cmd []string
 		for _, value := range raw.NodeTemplate.Command {
-			v := renderValueOrDie(logger, baseTemplate, value, node)
-			if v != "" {
-				cmd = append(cmd, v)
-			}
+			cmd = render.RenderCommandOrDie(value, cmd, "")
 		}
-		for key, value := range raw.NodeTemplate.Args {
-			v := renderValueOrDie(logger, baseTemplate, value, node)
-			if v != "" {
-				a := fmt.Sprintf("--%s", key)
-				cmd = append(cmd, a, v)
+		// Args
+		for key, values := range raw.NodeTemplate.Args {
+			switch values.(type) {
+			case bool:
+				cmd = append(cmd, key, strconv.FormatBool(values.(bool)))
+			case int:
+				cmd = append(cmd, key, strconv.Itoa(values.(int)))
+			case string:
+				cmd = render.RenderCommandOrDie(values.(string), cmd, key)
+			case []interface{}:
+				for i, value := range values.([]interface{}) {
+					if reflect.TypeOf(value).Kind() == reflect.String {
+						cmd = render.RenderCommandOrDie(value.(string), cmd, key)
+					} else {
+						log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"][%d]", value, key, i)
+					}
+				}
+			default:
+				log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"]", values, key)
 			}
 		}
 		node.Command = cmd
@@ -121,7 +138,7 @@ func renderOrDie(raw *RawConfig) *Config {
 	}
 	if nodeService.Enabled {
 		// NodeService.NodePort
-		s := renderValueOrDie(logger, baseTemplate, raw.NodeService.NodePortTemplate, node)
+		s := render.RenderValueOrDie(raw.NodeService.NodePortTemplate)
 		if port, err := strconv.Atoi(s); err != nil {
 			logger.Fatalf("Unable to convert .nodeService.nodePortTemplate to int: %s", err)
 		} else {
@@ -149,32 +166,4 @@ func renderOrDie(raw *RawConfig) *Config {
 		Logger:      logger,
 	}
 	return conf
-}
-
-func renderValue(baseTemplate *template.Template, text string, data interface{}) (string, error) {
-	t, err := baseTemplate.Clone()
-	if err != nil {
-		return "", fmt.Errorf("Unable to clone template: %w", err)
-	}
-
-	t, err = t.New("").Parse(text)
-	if err != nil {
-		return "", fmt.Errorf("Unable to parse template: %w", err)
-	}
-
-	var buf strings.Builder
-	err = t.Execute(&buf, data)
-	if err != nil {
-		return "", fmt.Errorf("Unable to render template: %w", err)
-	}
-
-	return buf.String(), nil
-}
-
-func renderValueOrDie(logger *zap.SugaredLogger, baseTemplate *template.Template, text string, data interface{}) string {
-	v, err := renderValue(baseTemplate, text, data)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	return v
 }

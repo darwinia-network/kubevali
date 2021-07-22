@@ -27,7 +27,7 @@ type RawWatchlog struct {
 type NodeTemplate struct {
 	Index   string
 	Command []string
-	Args    map[string]string
+	Args    map[string]interface{}
 }
 
 type RawNodeService struct {
