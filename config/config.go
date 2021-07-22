@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 	"text/template"
 	"time"
@@ -108,25 +109,32 @@ func renderOrDie(raw *RawConfig) *Config {
 		for _, value := range raw.NodeTemplate.Command {
 			cmd = render.RenderCommandOrDie(value, cmd, "")
 		}
+		// Sort args by flag names
+		flagNames := make([]string, 0, len(raw.NodeTemplate.Args))
+		for k := range raw.NodeTemplate.Args {
+			flagNames = append(flagNames, k)
+		}
+		sort.Strings(flagNames)
 		// Args
-		for key, values := range raw.NodeTemplate.Args {
+		for _, name := range flagNames {
+			values := raw.NodeTemplate.Args[name]
 			switch values.(type) {
 			case bool:
-				cmd = append(cmd, key, strconv.FormatBool(values.(bool)))
+				cmd = append(cmd, name, strconv.FormatBool(values.(bool)))
 			case int:
-				cmd = append(cmd, key, strconv.Itoa(values.(int)))
+				cmd = append(cmd, name, strconv.Itoa(values.(int)))
 			case string:
-				cmd = render.RenderCommandOrDie(values.(string), cmd, key)
+				cmd = render.RenderCommandOrDie(values.(string), cmd, name)
 			case []interface{}:
 				for i, value := range values.([]interface{}) {
 					if reflect.TypeOf(value).Kind() == reflect.String {
-						cmd = render.RenderCommandOrDie(value.(string), cmd, key)
+						cmd = render.RenderCommandOrDie(value.(string), cmd, name)
 					} else {
-						log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"][%d]", value, key, i)
+						log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"][%d]", value, name, i)
 					}
 				}
 			default:
-				log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"]", values, key)
+				log.Fatalf("Invalid type %T of nodeTemplate.args[\"%s\"]", values, name)
 			}
 		}
 		node.Command = cmd
