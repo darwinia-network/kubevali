@@ -10,7 +10,7 @@ Kubevali (pronounced as *kube-vali*) helps running multiple Darwinia or any subs
   - [Features](#features)
   - [Usage](#usage)
     - [Deploy on Kubernetes](#deploy-on-kubernetes)
-    - [Basics](#basics)
+    - [Basis](#basis)
     - [Watchlog](#watchlog)
   - [Kubevali DevOps Suite](#kubevali-devops-suite)
   - [License](#license)
@@ -46,7 +46,7 @@ There're 2 methods deploying kubevali on Kubernetes.
 1. Build you own chain node image and add kubevali into the image.
 2. Run kubevali as a `initContainer`, which copies the binary into a `emptyDir` volume, and override the entrypoint to kubevali by setting container's command (`.spec.containers[x].command` in Pod). Check out [./deploy](deploy/) for a full example.
 
-### Basics
+### Basis
 
 Kubevali uses a YAML file defining the command-line arguments of the node. This is an alternative solution for [paritytech/substrate#6856](https://github.com/paritytech/substrate/issues/6856).
 
