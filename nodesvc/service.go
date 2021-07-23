@@ -1,6 +1,7 @@
 package nodesvc
 
 import (
+	"context"
 	"os"
 
 	"github.com/darwinia-network/kubevali/config"
@@ -46,13 +47,13 @@ func CreateOrUpdate(conf *config.Config) {
 		conf.Logger.Fatal(err)
 	}
 
-	pod, err := clientset.CoreV1().Pods(ns).Get(podName, metav1.GetOptions{})
+	pod, err := clientset.CoreV1().Pods(ns).Get(context.Background(), podName, metav1.GetOptions{})
 	if err != nil {
 		conf.Logger.Fatal(err)
 	}
 
 	svcName := podName
-	svc, err := clientset.CoreV1().Services(ns).Get(svcName, metav1.GetOptions{})
+	svc, err := clientset.CoreV1().Services(ns).Get(context.Background(), svcName, metav1.GetOptions{})
 	svcExists := true
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -113,7 +114,7 @@ func CreateOrUpdate(conf *config.Config) {
 
 	if !svcExists {
 
-		_, err = clientset.CoreV1().Services(ns).Create(svc)
+		_, err = clientset.CoreV1().Services(ns).Create(context.Background(), svc, metav1.CreateOptions{})
 		if err != nil {
 			conf.Logger.Fatal(err)
 		} else {
@@ -122,7 +123,7 @@ func CreateOrUpdate(conf *config.Config) {
 
 	} else {
 
-		_, err = clientset.CoreV1().Services(ns).Update(svc)
+		_, err = clientset.CoreV1().Services(ns).Update(context.Background(), svc, metav1.UpdateOptions{})
 		if err != nil {
 			conf.Logger.Fatal(err)
 		} else {

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -56,7 +57,7 @@ func listNodesExternalIPs() ([]string, error) {
 
 	var externalIPs []string
 
-	nodelist, _ := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodelist, _ := clientset.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	for _, n := range nodelist.Items {
 		for _, a := range n.Status.Addresses {
 			if a.Type == "ExternalIP" {
